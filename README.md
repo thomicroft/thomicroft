@@ -1,1 +1,1 @@
-# kpmci
+# Komplexpraktikum Mensch-Computer-Interaktion
