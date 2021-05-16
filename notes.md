@@ -34,7 +34,7 @@ gesamte Bearbeitungszeit: 03.05.2021 - 30.07.2021 (12 Wochen)
 | Google Cloud STT                                             | - sehr ausgereift                                          | - GOOGLE !11!!111!<br />- nicht offline-fähig (vielleicht)<br />- nicht OpenSource |
 | Mozilla DeepSpeech                                           | - OpenSource<br />- offline-fähig                          | - nicht präzise                                              |
 | [Kaldi](http://publications.idiap.ch/downloads/papers/2012/Povey_ASRU2011_2011.pdf) | - OpenSource                                               |                                                              |
-| IBM Watson STT                                               |                                                            |                                                              |
+| IBM Watson STT                                               |                                                            | - nur online                                                 |
 | wit.ai                                                       |                                                            |                                                              |
 
 ### Verarbeitung
@@ -48,9 +48,10 @@ gesamte Bearbeitungszeit: 03.05.2021 - 30.07.2021 (12 Wochen)
 
 ### TTS
 
-| Framework  | pro                               | contra |
-| ---------- | --------------------------------- | ------ |
-| Coqui AI   | - OpenSource<br />- offline-fähig |        |
-| Google TTS |                                   |        |
-| Mimic 1    |                                   |        |
+| Framework   | pro                               | contra |
+| ----------- | --------------------------------- | ------ |
+| Coqui AI    | - OpenSource<br />- offline-fähig |        |
+| Mozilla TTS |                                   |        |
+| Google TTS  |                                   |        |
+| Mimic (2)   |                                   |        |
 
