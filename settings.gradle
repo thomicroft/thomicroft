@@ -1,0 +1,2 @@
+rootProject.name = "kpmci"
+include ':app'
