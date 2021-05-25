@@ -19,9 +19,9 @@
   -->
 
 <resources>
-    <string name="app_name">Mycroft</string>
+    <string name="app_name">Thomicroft</string>
     <string name="action_settings">Settings</string>
-    <string name="mycroftai">Mycroft</string>
+    <string name="mycroftai">Thomicroft</string>
     <string name="title_activity_settings">Settings</string>
     <string name="mycroft_website_url">https://home.mycroft.ai</string>
 
@@ -114,7 +114,7 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
 
-    <string name="speech_prompt">Say something to Mycroft&#8230;</string>
+    <string name="speech_prompt">Say something to Thomi&#8230;</string>
     <string name="send_utterance">Send utterance</string>
     <string name="speech_not_supported">Sorry! Your device doesn\'t support speech input</string>
     <string name="websocket_connected">Connected to Mycroft!</string>
@@ -142,5 +142,5 @@
     <string name="license_value">GPLv3</string>
     <string name="pref_default_display_not_set">not set</string>
     <string name="digit_zero">0</string>
-    <string name="landing_default_message">Nothing to show yet.. your conversations with Mycroft will appear here</string>
+    <string name="landing_default_message">Nothing to show yet.. your conversations with Thomi will appear here</string>
 </resources>

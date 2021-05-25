@@ -32,7 +32,7 @@
         android:id="@+id/bgImage"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:src="@drawable/mycroft_big"
+        android:src="@drawable/ic_thomicroft"
         android:alpha="0.2"/>
 
     <androidx.recyclerview.widget.RecyclerView
@@ -96,7 +96,8 @@
             android:layout_centerHorizontal="true"
             android:background="@android:color/transparent"
             android:contentDescription="@string/speech_prompt"
-            android:src="@drawable/ic_mycroft" />
+            android:src="@drawable/ic_thomicroft" />
+            <!-- TODO Icon austauschen-->
 
         <EditText
             android:id="@+id/utteranceInput"
