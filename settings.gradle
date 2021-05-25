@@ -1,2 +1,1 @@
-rootProject.name = "kpmci"
-include ':app'
+include ':mobile', ':wear', ':shared'
