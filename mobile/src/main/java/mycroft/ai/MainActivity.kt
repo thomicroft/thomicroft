@@ -63,6 +63,9 @@ import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQU
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_KEY_NAME
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
 
+import org.vosk.LibVosk
+
+
 class MainActivity : AppCompatActivity() {
     private val logTag = "Mycroft"
     private val utterances = mutableListOf<Utterance>()
@@ -368,8 +371,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Showing google speech input dialog
+     * Showing  speech input dialoggoogle
      */
+    // TODO STT
     private fun promptSpeechInput() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
@@ -378,6 +382,7 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
                 getString(R.string.speech_prompt))
         try {
+            // TODO Google austauschen
             startActivityForResult(intent, reqCodeSpeechInput)
         } catch (a: ActivityNotFoundException) {
             showToast(getString(R.string.speech_not_supported))
@@ -388,6 +393,7 @@ class MainActivity : AppCompatActivity() {
     /**
      * Receiving speech input
      */
+    // TODO Vielleicht ändern
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
