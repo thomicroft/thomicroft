@@ -27,10 +27,10 @@
 
     <ImageButton
         android:id="@+id/appwidget_mycroft"
-        android:src="@drawable/ic_mycroft"
+        android:src="@drawable/ic_thomicroft"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:previewImage="@drawable/ic_mycroft"
+        android:previewImage="@drawable/ic_thomicroft"
         android:background="#00000000"
         android:scaleType="fitCenter" />
 
