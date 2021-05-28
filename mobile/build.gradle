@@ -51,10 +51,14 @@ android {
 repositories {
     google()
     jcenter()
-    maven { url 'https://maven.fabric.io/public' }
+    maven { url 'https://maven.fabric.io/public'}
+    maven { url 'https://alphacephei.com/maven/'}
 }
 
 dependencies {
+    implementation group: 'net.java.dev.jna', name: 'jna', version: '5.7.0'
+    implementation group: 'com.alphacephei', name: 'vosk', version: '0.3.21+'
+
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.android.support:appcompat-v7:$rootProject.supportVersion"
     implementation "com.android.support:design:$rootProject.supportVersion"
