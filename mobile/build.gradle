@@ -57,7 +57,7 @@ repositories {
 
 dependencies {
     implementation group: 'net.java.dev.jna', name: 'jna', version: '5.7.0'
-    implementation group: 'com.alphacephei', name: 'vosk', version: '0.3.21+'
+    implementation group: 'com.alphacephei', name: 'vosk-android', version: '0.3.23'
 
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation "com.android.support:appcompat-v7:$rootProject.supportVersion"
