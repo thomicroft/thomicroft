@@ -411,6 +411,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
      */
     // TODO STT
     private fun promptSpeechInput() {
+        setUiState(STATE_MIC)
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -444,6 +445,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 }
             }
         }
+        setUiState(STATE_READY)
     }
 
     public override fun onDestroy() {
@@ -548,7 +550,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         StorageService.unpack(this, "model-en-us", "model",
             { model: Model? ->
                 this.model = model!!
-                // setUiState(STATE_READY)
+                setUiState(STATE_READY)
             }
         ) { exception: IOException ->
             setErrorState("Failed to unpack the model" + exception.message)
@@ -563,27 +565,30 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun setUiState(state: Int) {
         // TODO("Not implemented yet")
-        /*
         when (state) {
             STATE_START -> {
-
+                // hier würde gewartet werden bis Recognizer fertig ist... juckt i guess
+                resultView.setText("STATE_START")
             }
            STATE_READY -> {
-
+                // TODO UI Element soll nicht angezeigt werden!?
+               resultView.setText("STATE_READY")
             }
             STATE_DONE -> {
-
+                // TODO Texte zurücksetzen und zurück in STATE_READY
+                resultView.setText("STATE_DONE")
             }
             STATE_FILE -> {
-
+                // nur für File Recognition
+                resultView.setText("STATE_FILE")
             }
             STATE_MIC -> {
-
+                // TODO Mikrofon soll aufnehmen
+                resultView.setText("STATE_MIC")
             }
             else -> throw IllegalStateException("Unexpected value: $state")
         }
 
-         */
     }
 
     override fun onPartialResult(p0: String?) {
