@@ -34,7 +34,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.EditorInfo
-import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
@@ -52,7 +51,6 @@ import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.shared.utilities.GuiUtilities
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
-import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_KEY_NAME
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
 import mycroft.ai.utils.NetworkUtil
 import org.java_websocket.client.WebSocketClient
@@ -61,6 +59,7 @@ import org.java_websocket.handshake.ServerHandshake
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
+import org.vosk.Recognizer
 import org.vosk.android.RecognitionListener
 import org.vosk.android.SpeechService
 import org.vosk.android.SpeechStreamService
@@ -104,8 +103,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private final val PERMISSIONS_REQUEST_RECORD_AUDIO = 1
 
     private lateinit var model : Model
-    private lateinit var speechService: SpeechService
-    private lateinit var speechStreamServer : SpeechStreamService
+    // TODO funktioniert das mit null?
+    private var speechService: SpeechService? = null
+    private var speechStreamService : SpeechStreamService? = null
     private lateinit var resultView : TextView
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -155,6 +155,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 false
             }
         })
+        // TODO activate Microphone
         micButton.setOnClickListener { promptSpeechInput() }
         sendUtterance.setOnClickListener { sendUtterance() }
 
@@ -189,13 +190,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         setUiState(STATE_START)
         LibVosk.setLogLevel(LogLevel.INFO)
 
-        var permissionCheck = ContextCompat.checkSelfPermission(getApplicationContext(), Manifest.permission.RECORD_AUDIO)
+        var permissionCheck = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.RECORD_AUDIO)
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
         } else {
             initModel()
         }
-
+        // initModel()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -328,6 +329,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     // send to mycroft
                     if (message != null) {
                         Log.d(logTag, "Wear message received: [$message] sending to Mycroft")
+                        // TODO hier wird message gesendet an Mycroft, alles andere ist uns ziemlich Rille
                         sendMessage(message)
                     }
                 }
@@ -427,10 +429,27 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     }
 
+    private fun recognizeMicrophone() {
+        if (speechService != null) {
+            setUiState(STATE_READY)
+            speechService!!.stop()
+            speechService = null
+        } else {
+            setUiState(STATE_MIC)
+            try {
+                val rec = Recognizer(model, 16000.0f)
+                val speechService = SpeechService(rec, 16000.0f)
+                speechService.startListening(this)
+            } catch (e : IOException) {
+                setErrorState(e.message!!)
+            }
+        }
+    }
+
     /**
      * Receiving speech input
      */
-    // TODO Vielleicht ändern
+    // TODO wird aufgerufen sobald promptSpeechInput Activity endet
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -453,13 +472,22 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         ttsManager.shutDown()
         isNetworkChangeReceiverRegistered = false
         isWearBroadcastRevieverRegistered = false
+
+        if (speechService != null) {
+            speechService!!.stop()
+            speechService!!.shutdown()
+        }
+
+        if (speechStreamService != null) {
+            speechStreamService!!.stop()
+        }
     }
 
     public override fun onStart() {
         super.onStart()
         recordVersionInfo()
         registerReceivers()
-        checkIfLaunchedFromWidget(intent)
+        // checkIfLaunchedFromWidget(intent)
     }
 
     public override fun onStop() {
@@ -508,6 +536,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         maximumRetries = Integer.parseInt(sharedPref.getString("maximumRetries", "1")!!)
     }
 
+    /*
     private fun checkIfLaunchedFromWidget(intent: Intent) {
         val extras = getIntent().extras
         if (extras != null) {
@@ -528,6 +557,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             intent.putExtra("autoPromptForSpeech", false)
         }
     }
+     */
 
     private fun recordVersionInfo() {
         try {
@@ -553,62 +583,77 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 setUiState(STATE_READY)
             }
         ) { exception: IOException ->
-            setErrorState("Failed to unpack the model" + exception.message)
+            setErrorState(
+                "Failed to unpack the model" + exception.message
+            )
         }
 
     }
 
     private fun setErrorState(message: String) {
         resultView.text = message
-        // setViewId stuff was deleted
+        // setViewId stuff was deleted here
     }
 
     private fun setUiState(state: Int) {
-        // TODO("Not implemented yet")
         when (state) {
             STATE_START -> {
                 // hier würde gewartet werden bis Recognizer fertig ist... juckt i guess
-                resultView.setText("STATE_START")
+                resultView.text = "STATE_START"
             }
            STATE_READY -> {
                 // TODO UI Element soll nicht angezeigt werden!?
-               resultView.setText("STATE_READY")
+               resultView.text = "STATE_READY"
             }
             STATE_DONE -> {
                 // TODO Texte zurücksetzen und zurück in STATE_READY
-                resultView.setText("STATE_DONE")
+                resultView.text = "STATE_DONE"
             }
             STATE_FILE -> {
-                // nur für File Recognition
-                resultView.setText("STATE_FILE")
+                // unused, nur für Textfiles
+                resultView.text = "STATE_FILE"
             }
             STATE_MIC -> {
                 // TODO Mikrofon soll aufnehmen
-                resultView.setText("STATE_MIC")
+                resultView.text = "STATE_MIC"
             }
             else -> throw IllegalStateException("Unexpected value: $state")
         }
 
     }
 
-    override fun onPartialResult(p0: String?) {
-        TODO("Not yet implemented")
+    override fun onPartialResult(hypothesis: String) {
+        //resultView.append(hypothesis + "\n")
+        resultView.text = hypothesis
     }
 
-    override fun onResult(p0: String?) {
-        TODO("Not yet implemented")
+    override fun onResult(hypothesis : String) {
+        // resultView.append(hypothesis + "\n")
+        resultView.text = hypothesis
     }
 
-    override fun onFinalResult(p0: String?) {
-        TODO("Not yet implemented")
+    override fun onFinalResult(hypothesis: String) {
+        // resultView.append(hypothesis + "\n")
+        resultView.text = hypothesis
+        // TODO hier vielleicht zurück zu Ready_State
+        setUiState(STATE_READY)
+        if (speechStreamService != null) {
+            speechStreamService = null
+        }
     }
 
-    override fun onError(p0: java.lang.Exception?) {
-        TODO("Not yet implemented")
+    override fun onError(e: java.lang.Exception) {
+        setErrorState(e.message!!)
     }
 
     override fun onTimeout() {
-        TODO("Not yet implemented")
+        setUiState(STATE_READY)
+    }
+
+    private fun pause(checked : Boolean) {
+        if (speechService != null) {
+            speechService!!.setPause(checked)
+        }
     }
 
 }
