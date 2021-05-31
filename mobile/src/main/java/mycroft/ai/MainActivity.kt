@@ -156,7 +156,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             }
         })
         // TODO activate Microphone
-        micButton.setOnClickListener { promptSpeechInput() }
+        micButton.setOnClickListener { recognizeMicrophone() }
         sendUtterance.setOnClickListener { sendUtterance() }
 
         registerForContextMenu(cardList)
@@ -196,7 +196,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         } else {
             initModel()
         }
-        // initModel()
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -431,11 +431,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun recognizeMicrophone() {
         if (speechService != null) {
-            setUiState(STATE_READY)
             speechService!!.stop()
             speechService = null
+            setUiState(STATE_READY)
+            showToast("Stop")
         } else {
             setUiState(STATE_MIC)
+            showToast("Startet")
             try {
                 val rec = Recognizer(model, 16000.0f)
                 val speechService = SpeechService(rec, 16000.0f)
@@ -624,7 +626,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onPartialResult(hypothesis: String) {
         //resultView.append(hypothesis + "\n")
-        resultView.text = hypothesis
+        // resultView.text = hypothesis
     }
 
     override fun onResult(hypothesis : String) {
@@ -640,6 +642,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechStreamService != null) {
             speechStreamService = null
         }
+        showToast(hypothesis)
     }
 
     override fun onError(e: java.lang.Exception) {
