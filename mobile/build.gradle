@@ -40,6 +40,10 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
 
     buildFeatures{
         dataBinding = true
@@ -91,6 +95,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
     wearApp project(':wear')
     implementation project(':shared')
+    implementation project(':models')
     //kotlin
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     //rxjava,rxandroid
