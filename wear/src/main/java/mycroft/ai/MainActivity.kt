@@ -29,6 +29,7 @@ import android.speech.RecognizerIntent
 import android.support.wearable.activity.WearableActivity
 import android.support.wearable.view.BoxInsetLayout
 import android.util.Log
+import android.view.View
 import android.widget.ImageButton
 import android.widget.Toast
 
@@ -191,4 +192,9 @@ class MainActivity : WearableActivity(), GoogleApiClient.ConnectionCallbacks, Go
 
         private val WEARABLE_MAIN = "WearableMain"
     }
+
+    fun onClick(view: View) {}
+    fun onClick(view: View) {}
+    fun onClick(view: View) {}
+    fun onClick(view: View) {}
 }

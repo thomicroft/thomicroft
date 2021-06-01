@@ -619,6 +619,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             STATE_MIC -> {
                 // TODO Mikrofon soll aufnehmen
                 resultView.text = "STATE_MIC"
+                textfeld.visibility = View.VISIBLE
             }
             else -> throw IllegalStateException("Unexpected value: $state")
         }

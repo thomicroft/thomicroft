@@ -63,7 +63,7 @@
             android:textAppearance="?android:attr/textAppearanceLarge"
             tools:text="Some text to check whether the layout looks ok.\n \nHere's how it appears with line breaks."
             />
-
+            <!-- TODO: Icon austauschen -->
     </FrameLayout>
 
 
