@@ -56,6 +56,7 @@ import mycroft.ai.utils.NetworkUtil
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.exceptions.WebsocketNotConnectedException
 import org.java_websocket.handshake.ServerHandshake
+import org.json.JSONObject
 import org.vosk.LibVosk
 import org.vosk.LogLevel
 import org.vosk.Model
@@ -440,8 +441,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             showToast("Startet")
             try {
                 val rec = Recognizer(model, 16000.0f)
-                val speechService = SpeechService(rec, 16000.0f)
-                speechService.startListening(this)
+                speechService = SpeechService(rec, 16000.0f)
+                speechService!!.startListening(this)
             } catch (e : IOException) {
                 setErrorState(e.message!!)
             }
@@ -630,19 +631,22 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onResult(hypothesis : String) {
+        var hypothesisText = JSONObject(hypothesis)
+        resultView.append(hypothesisText["text"].toString())
         // resultView.append(hypothesis + "\n")
-        resultView.text = hypothesis
+        // resultView.text = hypothesisText["text"].toString()
     }
 
     override fun onFinalResult(hypothesis: String) {
-        // resultView.append(hypothesis + "\n")
-        resultView.text = hypothesis
+        var hypothesisText = JSONObject(hypothesis)["text"].toString()
         // TODO hier vielleicht zurück zu Ready_State
         setUiState(STATE_READY)
         if (speechStreamService != null) {
             speechStreamService = null
         }
-        showToast(hypothesis)
+        showToast(hypothesisText)
+        // TODO sendMessage to Mycroft
+        sendMessage(hypothesisText)
     }
 
     override fun onError(e: java.lang.Exception) {
