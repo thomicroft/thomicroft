@@ -109,7 +109,7 @@
             android:layout_marginTop="0dp"
             android:background="@android:color/transparent"
             android:contentDescription="@string/speech_prompt"
-            android:src="@drawable/ic_mic_black_24dp"
+            android:src="@drawable/microfon"
             tools:ignore="NotSibling" />
             <!-- TODO Icon austauschen-->
 
