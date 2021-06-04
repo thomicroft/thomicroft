@@ -20,6 +20,7 @@
 
 package mycroft.ai
 
+import android.Manifest
 import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
@@ -36,34 +37,42 @@ import android.view.inputmethod.EditorInfo
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
-
 import com.crashlytics.android.Crashlytics
-
-import org.java_websocket.client.WebSocketClient
-import org.java_websocket.exceptions.WebsocketNotConnectedException
-import org.java_websocket.handshake.ServerHandshake
-
-import java.net.URI
-import java.net.URISyntaxException
-import java.util.Locale
-
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import mycroft.ai.Constants.MycroftMobileConstants.VERSION_CODE_PREFERENCE_KEY
+import mycroft.ai.Constants.MycroftMobileConstants.VERSION_NAME_PREFERENCE_KEY
 import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.shared.utilities.GuiUtilities
-import mycroft.ai.utils.NetworkUtil
-
-import mycroft.ai.Constants.MycroftMobileConstants.VERSION_CODE_PREFERENCE_KEY
-import mycroft.ai.Constants.MycroftMobileConstants.VERSION_NAME_PREFERENCE_KEY
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
-import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_KEY_NAME
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
+import mycroft.ai.utils.NetworkUtil
+import org.java_websocket.client.WebSocketClient
+import org.java_websocket.exceptions.WebsocketNotConnectedException
+import org.java_websocket.handshake.ServerHandshake
+import org.json.JSONObject
+import org.vosk.LibVosk
+import org.vosk.LogLevel
+import org.vosk.Model
+import org.vosk.Recognizer
+import org.vosk.android.RecognitionListener
+import org.vosk.android.SpeechService
+import org.vosk.android.SpeechStreamService
+import org.vosk.android.StorageService
+import java.io.IOException
+import java.net.URI
+import java.net.URISyntaxException
+import java.util.*
 
-class MainActivity : AppCompatActivity() {
+
+class MainActivity : AppCompatActivity(), RecognitionListener {
+    // Mycroft Part
     private val logTag = "Mycroft"
     private val utterances = mutableListOf<Utterance>()
     private val reqCodeSpeechInput = 100
@@ -74,6 +83,8 @@ class MainActivity : AppCompatActivity() {
     private var isWearBroadcastRevieverRegistered = false
     private var launchedFromWidget = false
     private var autoPromptForSpeech = false
+    private var resultText = ""
+
 
     private lateinit var ttsManager: TTSManager
     private lateinit var mycroftAdapter: MycroftAdapter
@@ -84,9 +95,26 @@ class MainActivity : AppCompatActivity() {
 
     var webSocketClient: WebSocketClient? = null
 
+    // STT Part (Vosk/Alphacephei)
+    private val STATE_START = 0
+    private val STATE_READY = 1
+    private val STATE_DONE = 2
+    private val STATE_FILE = 3
+    private val STATE_MIC = 4
+
+    /* Used to handle permission request */
+    private final val PERMISSIONS_REQUEST_RECORD_AUDIO = 1
+
+    private lateinit var model : Model
+    // TODO funktioniert das mit null?
+    private var speechService: SpeechService? = null
+    private var speechStreamService : SpeechStreamService? = null
+    private lateinit var resultView : TextView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Mycroft
         Fabric.with(this, Crashlytics())
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar as Toolbar?)
@@ -121,6 +149,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        // Textinput
         utteranceInput.setOnEditorActionListener(TextView.OnEditorActionListener { _, actionId, _ ->
             if(actionId == EditorInfo.IME_ACTION_DONE){
                 sendUtterance()
@@ -129,7 +158,8 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         })
-        micButton.setOnClickListener { promptSpeechInput() }
+        // TODO activate Microphone
+        micButton.setOnClickListener { recognizeMicrophone() }
         sendUtterance.setOnClickListener { sendUtterance() }
 
         registerForContextMenu(cardList)
@@ -157,6 +187,19 @@ class MainActivity : AppCompatActivity() {
 
         // start the discovery activity (testing only)
         // startActivity(new Intent(this, DiscoveryActivity.class));
+
+        // TODO Vosk STT
+        resultView = findViewById(R.id.result_text)
+        setUiState(STATE_START)
+        LibVosk.setLogLevel(LogLevel.INFO)
+
+        var permissionCheck = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.RECORD_AUDIO)
+        if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
+        } else {
+            initModel()
+        }
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -289,6 +332,7 @@ class MainActivity : AppCompatActivity() {
                     // send to mycroft
                     if (message != null) {
                         Log.d(logTag, "Wear message received: [$message] sending to Mycroft")
+                        // TODO hier wird message gesendet an Mycroft, alles andere ist uns ziemlich Rille
                         sendMessage(message)
                     }
                 }
@@ -368,9 +412,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     /**
-     * Showing google speech input dialog
+     * Showing  speech input dialoggoogle
      */
+    // TODO STT
     private fun promptSpeechInput() {
+        setUiState(STATE_MIC)
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
         intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
                 RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
@@ -378,6 +424,7 @@ class MainActivity : AppCompatActivity() {
         intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
                 getString(R.string.speech_prompt))
         try {
+            // TODO Google austauschen
             startActivityForResult(intent, reqCodeSpeechInput)
         } catch (a: ActivityNotFoundException) {
             showToast(getString(R.string.speech_not_supported))
@@ -385,9 +432,29 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    private fun recognizeMicrophone() {
+        if (speechService != null) {
+            speechService!!.stop()
+            speechService = null
+            sendMessage(resultText)
+            setUiState(STATE_READY)
+            resultText = ""
+        } else {
+            setUiState(STATE_MIC)
+            try {
+                val rec = Recognizer(model, 16000.0f)
+                speechService = SpeechService(rec, 16000.0f)
+                speechService!!.startListening(this)
+            } catch (e : IOException) {
+                setErrorState(e.message!!)
+            }
+        }
+    }
+
     /**
      * Receiving speech input
      */
+    // TODO wird aufgerufen sobald promptSpeechInput Activity endet
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -402,6 +469,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        setUiState(STATE_READY)
     }
 
     public override fun onDestroy() {
@@ -409,13 +477,22 @@ class MainActivity : AppCompatActivity() {
         ttsManager.shutDown()
         isNetworkChangeReceiverRegistered = false
         isWearBroadcastRevieverRegistered = false
+
+        if (speechService != null) {
+            speechService!!.stop()
+            speechService!!.shutdown()
+        }
+
+        if (speechStreamService != null) {
+            speechStreamService!!.stop()
+        }
     }
 
     public override fun onStart() {
         super.onStart()
         recordVersionInfo()
         registerReceivers()
-        checkIfLaunchedFromWidget(intent)
+        // checkIfLaunchedFromWidget(intent)
     }
 
     public override fun onStop() {
@@ -464,6 +541,7 @@ class MainActivity : AppCompatActivity() {
         maximumRetries = Integer.parseInt(sharedPref.getString("maximumRetries", "1")!!)
     }
 
+    /*
     private fun checkIfLaunchedFromWidget(intent: Intent) {
         val extras = getIntent().extras
         if (extras != null) {
@@ -484,6 +562,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("autoPromptForSpeech", false)
         }
     }
+     */
 
     private fun recordVersionInfo() {
         try {
@@ -500,4 +579,90 @@ class MainActivity : AppCompatActivity() {
     private fun showToast(message: String) {
         GuiUtilities.showToast(applicationContext, message)
     }
+
+    // TODO Test if this works, function was autogenerated from java code
+    private fun initModel() {
+        StorageService.unpack(this, "vosk-model-small-de-0.15", "model",
+            { model: Model? ->
+                this.model = model!!
+                setUiState(STATE_READY)
+            }
+        ) { exception: IOException ->
+            setErrorState(
+                "Failed to unpack the model" + exception.message
+            )
+        }
+
+    }
+
+    private fun setErrorState(message: String) {
+        resultView.text = message
+        // setViewId stuff was deleted here
+    }
+
+    private fun setUiState(state: Int) {
+        when (state) {
+            STATE_START -> {
+                // hier würde gewartet werden bis Recognizer fertig ist... juckt i guess
+                resultView.text = "STATE_START"
+            }
+           STATE_READY -> {
+                // TODO UI Element soll nicht angezeigt werden!?
+               resultView.text = "STATE_READY"
+            }
+            STATE_DONE -> {
+                // TODO Texte zurücksetzen und zurück in STATE_READY
+                resultView.text = "STATE_DONE"
+            }
+            STATE_FILE -> {
+                // unused, nur für Textfiles
+                resultView.text = "STATE_FILE"
+            }
+            STATE_MIC -> {
+                // TODO Mikrofon soll aufnehmen
+                resultView.text = "STATE_MIC"
+            }
+            else -> throw IllegalStateException("Unexpected value: $state")
+        }
+
+    }
+
+    override fun onPartialResult(hypothesis: String) {
+        //resultView.append(hypothesis + "\n")
+        // resultView.text = hypothesis
+    }
+
+    override fun onResult(hypothesis : String) {
+        var hypothesisText = JSONObject(hypothesis)["text"].toString()
+        resultView.append(" $hypothesisText")
+        // resultView.append(hypothesis + "\n")
+        // resultView.text = hypothesisText["text"].toString()
+        resultText += " $hypothesisText"
+
+    }
+
+    override fun onFinalResult(hypothesis: String) {
+        var hypothesisText = JSONObject(hypothesis)["text"].toString()
+        // TODO hier vielleicht zurück zu Ready_State
+        setUiState(STATE_READY)
+        if (speechStreamService != null) {
+            speechStreamService = null
+        }
+
+    }
+
+    override fun onError(e: java.lang.Exception) {
+        setErrorState(e.message!!)
+    }
+
+    override fun onTimeout() {
+        setUiState(STATE_READY)
+    }
+
+    private fun pause(checked : Boolean) {
+        if (speechService != null) {
+            speechService!!.setPause(checked)
+        }
+    }
+
 }

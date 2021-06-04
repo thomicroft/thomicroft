@@ -37,13 +37,24 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/cardList"
-        android:visibility="visible"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
         android:layout_marginTop="@dimen/card_list_margin_top"
-        android:layout_marginBottom="@dimen/card_list_margin_bottom" />
+        android:layout_marginBottom="@dimen/card_list_margin_bottom"
+        android:visibility="visible" />
+
+    <!-- TODO Textoutput for STT Test -->
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/result_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/defaultMessageTextView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="80dp"
+        android:textAlignment="center"
+        android:textAppearance="@style/TextAppearance.AppCompat.Light.SearchResult.Subtitle"
+        />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/defaultMessageTextView"
@@ -96,7 +107,7 @@
             android:layout_centerHorizontal="true"
             android:background="@android:color/transparent"
             android:contentDescription="@string/speech_prompt"
-            android:src="@drawable/ic_thomicroft" />
+            android:src="@drawable/ic_mic_black_24dp" />
             <!-- TODO Icon austauschen-->
 
         <EditText
