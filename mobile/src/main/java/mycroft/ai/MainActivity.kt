@@ -83,6 +83,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var isWearBroadcastRevieverRegistered = false
     private var launchedFromWidget = false
     private var autoPromptForSpeech = false
+    private var resultText = ""
+
 
     private lateinit var ttsManager: TTSManager
     private lateinit var mycroftAdapter: MycroftAdapter
@@ -434,11 +436,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
+            sendMessage(resultText)
             setUiState(STATE_READY)
-            showToast("Stop")
+            resultText = ""
         } else {
             setUiState(STATE_MIC)
-            showToast("Startet")
             try {
                 val rec = Recognizer(model, 16000.0f)
                 speechService = SpeechService(rec, 16000.0f)
@@ -631,10 +633,12 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onResult(hypothesis : String) {
-        var hypothesisText = JSONObject(hypothesis)
-        resultView.append(hypothesisText["text"].toString())
+        var hypothesisText = JSONObject(hypothesis)["text"].toString()
+        resultView.append(" $hypothesisText")
         // resultView.append(hypothesis + "\n")
         // resultView.text = hypothesisText["text"].toString()
+        resultText += " $hypothesisText"
+
     }
 
     override fun onFinalResult(hypothesis: String) {
@@ -644,9 +648,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechStreamService != null) {
             speechStreamService = null
         }
-        showToast(hypothesisText)
-        // TODO sendMessage to Mycroft
-        sendMessage(hypothesisText)
+
     }
 
     override fun onError(e: java.lang.Exception) {
