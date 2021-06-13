@@ -24,4 +24,5 @@
     <color name="colorPrimaryDark">#4990e2</color>
     <color name="colorAccent">#80c3f3</color>
     <color name="colorUserCard">#E1F5FE</color>
+    <color name="defaultTextColor">#FFFFFF</color>
 </resources>
