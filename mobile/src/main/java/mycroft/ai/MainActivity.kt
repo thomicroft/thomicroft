@@ -402,6 +402,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     addData(Utterance(msg, UtteranceFrom.USER))
                 } catch (exception: WebsocketNotConnectedException) {
                     showToast(resources.getString(R.string.websocket_closed))
+                } catch (exception: KotlinNullPointerException) {
+                    showToast(resources.getString(R.string.websocket_null))
                 }
             }, 1000)
 

@@ -119,6 +119,7 @@
     <string name="speech_not_supported">Sorry! Your device doesn\'t support speech input</string>
     <string name="websocket_connected">Connected to Mycroft!</string>
     <string name="websocket_closed">Connection to Mycroft has closed! Please re-connect and check connection settings!</string>
+    <string name="websocket_null">Connection to Mycroft is null! Please re-connect and check connection settings!</string>
     <string name="websocket_error">Connection error! Please ensure Ezra is available and on the same network as your device!</string>
 
     <string name="connect">Connect</string>
