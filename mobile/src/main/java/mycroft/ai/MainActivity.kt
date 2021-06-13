@@ -606,22 +606,18 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         when (state) {
             STATE_START -> {
                 // hier würde gewartet werden bis Recognizer fertig ist... juckt i guess
-                resultView.text = "STATE_START"
             }
            STATE_READY -> {
-                // TODO UI Element soll nicht angezeigt werden!?
-               resultView.text = "STATE_READY"
+               textfeld.visibility = View.INVISIBLE
+               result_text.visibility = View.INVISIBLE
             }
             STATE_DONE -> {
-                // TODO Texte zurücksetzen und zurück in STATE_READY
-                resultView.text = "STATE_DONE"
             }
             STATE_FILE -> {
                 // unused, nur für Textfiles
-                resultView.text = "STATE_FILE"
             }
             STATE_MIC -> {
-                // TODO Mikrofon soll aufnehmen
+                resultView.text = ""
                 textfeld.visibility = View.VISIBLE
                 result_text.visibility = View.VISIBLE
             }
