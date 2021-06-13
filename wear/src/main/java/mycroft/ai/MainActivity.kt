@@ -192,9 +192,4 @@ class MainActivity : WearableActivity(), GoogleApiClient.ConnectionCallbacks, Go
 
         private val WEARABLE_MAIN = "WearableMain"
     }
-
-    fun onClick(view: View) {}
-    fun onClick(view: View) {}
-    fun onClick(view: View) {}
-    fun onClick(view: View) {}
 }
