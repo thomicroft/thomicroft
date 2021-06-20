@@ -41,6 +41,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.*
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
@@ -435,6 +438,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun recognizeMicrophone() {
+        sendTTSRequest("")
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
@@ -447,7 +451,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 val rec = Recognizer(model, 16000.0f)
                 speechService = SpeechService(rec, 16000.0f)
                 speechService!!.startListening(this)
-            } catch (e : IOException) {
+            } catch (e: IOException) {
                 setErrorState(e.message!!)
             }
         }
@@ -662,6 +666,20 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechService != null) {
             speechService!!.setPause(checked)
         }
+    }
+
+    private fun sendTTSRequest(input_text : String) {
+        val queue = Volley.newRequestQueue(this)
+        val url = "https://www.google.com"
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            Response.Listener<String> { response ->
+                // Display the first 500 characters of the response string.
+                val text = "Response is: ${response.substring(0, 500)}"
+            },
+            Response.ErrorListener { val errorText = "That didn't work!" })
+        queue.add(stringRequest)
+
     }
 
 }
