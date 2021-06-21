@@ -95,6 +95,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var sharedPref: SharedPreferences
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
     private lateinit var wearBroadcastReceiver: BroadcastReceiver
+    private lateinit var marytts : TextToSpeechMary;
 
     var webSocketClient: WebSocketClient? = null
 
@@ -124,6 +125,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
 
         loadPreferences()
+
+        marytts = TextToSpeechMary(this, wsip)
 
         ttsManager = TTSManager(this)
         mycroftAdapter = MycroftAdapter(utterances, applicationContext, menuInflater)
@@ -301,7 +304,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         defaultMessageTextView.visibility = View.GONE
         mycroftAdapter.notifyItemInserted(utterances.size - 1)
         if (voxswitch.isChecked) {
-            ttsManager.addQueue(mycroftUtterance.utterance)
+            //ttsManager.addQueue(mycroftUtterance.utterance)
+            if (mycroftUtterance.from.toString() != "USER") {
+                marytts.sendTTSRequest(mycroftUtterance.utterance)
+            }
         }
         cardList.smoothScrollToPosition(mycroftAdapter.itemCount - 1)
     }
@@ -438,7 +444,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun recognizeMicrophone() {
-        sendTTSRequest("")
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
@@ -666,20 +671,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechService != null) {
             speechService!!.setPause(checked)
         }
-    }
-
-    private fun sendTTSRequest(input_text : String) {
-        val queue = Volley.newRequestQueue(this)
-        val url = "https://www.google.com"
-        val stringRequest = StringRequest(
-            Request.Method.GET, url,
-            Response.Listener<String> { response ->
-                // Display the first 500 characters of the response string.
-                val text = "Response is: ${response.substring(0, 500)}"
-            },
-            Response.ErrorListener { val errorText = "That didn't work!" })
-        queue.add(stringRequest)
-
     }
 
 }
