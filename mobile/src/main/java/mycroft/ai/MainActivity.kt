@@ -41,6 +41,9 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.Request
+import com.android.volley.Response
+import com.android.volley.toolbox.*
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
@@ -92,6 +95,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var sharedPref: SharedPreferences
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
     private lateinit var wearBroadcastReceiver: BroadcastReceiver
+    private lateinit var marytts : TextToSpeechMary;
 
     var webSocketClient: WebSocketClient? = null
 
@@ -121,6 +125,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
 
         loadPreferences()
+
+        marytts = TextToSpeechMary(this, wsip)
 
         ttsManager = TTSManager(this)
         mycroftAdapter = MycroftAdapter(utterances, applicationContext, menuInflater)
@@ -298,7 +304,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         defaultMessageTextView.visibility = View.GONE
         mycroftAdapter.notifyItemInserted(utterances.size - 1)
         if (voxswitch.isChecked) {
-            ttsManager.addQueue(mycroftUtterance.utterance)
+            //ttsManager.addQueue(mycroftUtterance.utterance)
+            if (mycroftUtterance.from.toString() != "USER") {
+                marytts.sendTTSRequest(mycroftUtterance.utterance)
+            }
         }
         cardList.smoothScrollToPosition(mycroftAdapter.itemCount - 1)
     }
@@ -447,7 +456,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 val rec = Recognizer(model, 16000.0f)
                 speechService = SpeechService(rec, 16000.0f)
                 speechService!!.startListening(this)
-            } catch (e : IOException) {
+            } catch (e: IOException) {
                 setErrorState(e.message!!)
             }
         }
