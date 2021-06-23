@@ -99,7 +99,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     var webSocketClient: WebSocketClient? = null
 
-    // STT Part (Vosk/Alphacephei)
     private val STATE_START = 0
     private val STATE_READY = 1
     private val STATE_DONE = 2
@@ -110,7 +109,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private final val PERMISSIONS_REQUEST_RECORD_AUDIO = 1
 
     private lateinit var model : Model
-    // TODO funktioniert das mit null?
     private var speechService: SpeechService? = null
     private var speechStreamService : SpeechStreamService? = null
     private lateinit var resultView : TextView
@@ -164,7 +162,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 false
             }
         })
-        // TODO activate Microphone
         micButton.setOnClickListener { recognizeMicrophone() }
         sendUtterance.setOnClickListener { sendUtterance() }
 
@@ -194,7 +191,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         // start the discovery activity (testing only)
         // startActivity(new Intent(this, DiscoveryActivity.class));
 
-        // TODO Vosk STT
         resultView = findViewById(R.id.result_text)
         setUiState(STATE_START)
         LibVosk.setLogLevel(LogLevel.INFO)
@@ -304,7 +300,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         defaultMessageTextView.visibility = View.GONE
         mycroftAdapter.notifyItemInserted(utterances.size - 1)
         if (voxswitch.isChecked) {
-            //ttsManager.addQueue(mycroftUtterance.utterance)
             if (mycroftUtterance.from.toString() != "USER") {
                 marytts.sendTTSRequest(mycroftUtterance.utterance)
             }
@@ -341,7 +336,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     // send to mycroft
                     if (message != null) {
                         Log.d(logTag, "Wear message received: [$message] sending to Mycroft")
-                        // TODO hier wird message gesendet an Mycroft, alles andere ist uns ziemlich Rille
                         sendMessage(message)
                     }
                 }
@@ -422,27 +416,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     }
 
-    /**
-     * Showing  speech input dialoggoogle
-     */
-    // TODO STT
-    private fun promptSpeechInput() {
-        setUiState(STATE_MIC)
-        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL,
-                RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-        intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
-        intent.putExtra(RecognizerIntent.EXTRA_PROMPT,
-                getString(R.string.speech_prompt))
-        try {
-            // TODO Google austauschen
-            startActivityForResult(intent, reqCodeSpeechInput)
-        } catch (a: ActivityNotFoundException) {
-            showToast(getString(R.string.speech_not_supported))
-        }
-
-    }
-
     private fun recognizeMicrophone() {
         if (speechService != null) {
             speechService!!.stop()
@@ -465,7 +438,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     /**
      * Receiving speech input
      */
-    // TODO wird aufgerufen sobald promptSpeechInput Activity endet
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
 
@@ -503,7 +475,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         super.onStart()
         recordVersionInfo()
         registerReceivers()
-        // checkIfLaunchedFromWidget(intent)
     }
 
     public override fun onStop() {
@@ -552,29 +523,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         maximumRetries = Integer.parseInt(sharedPref.getString("maximumRetries", "1")!!)
     }
 
-    /*
-    private fun checkIfLaunchedFromWidget(intent: Intent) {
-        val extras = getIntent().extras
-        if (extras != null) {
-            if (extras.containsKey("launchedFromWidget")) {
-                launchedFromWidget = extras.getBoolean("launchedFromWidget")
-                autoPromptForSpeech = extras.getBoolean("autoPromptForSpeech")
-            }
-
-            if (extras.containsKey(MYCROFT_WEAR_REQUEST_KEY_NAME)) {
-                Log.d(logTag, "checkIfLaunchedFromWidget - extras contain key:$MYCROFT_WEAR_REQUEST_KEY_NAME")
-                extras.getString(MYCROFT_WEAR_REQUEST_KEY_NAME)?.let { sendMessage(it) }
-                getIntent().removeExtra(MYCROFT_WEAR_REQUEST_KEY_NAME)
-            }
-        }
-
-        if (autoPromptForSpeech) {
-            promptSpeechInput()
-            intent.putExtra("autoPromptForSpeech", false)
-        }
-    }
-     */
-
     private fun recordVersionInfo() {
         try {
             val packageInfo = packageManager.getPackageInfo(packageName, 0)
@@ -591,7 +539,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         GuiUtilities.showToast(applicationContext, message)
     }
 
-    // TODO Test if this works, function was autogenerated from java code
     private fun initModel() {
         StorageService.unpack(this, "vosk-model-small-de-0.15", "model",
             { model: Model? ->
@@ -614,7 +561,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private fun setUiState(state: Int) {
         when (state) {
             STATE_START -> {
-                // hier würde gewartet werden bis Recognizer fertig ist... juckt i guess
             }
            STATE_READY -> {
                textfeld.visibility = View.INVISIBLE
@@ -623,7 +569,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             STATE_DONE -> {
             }
             STATE_FILE -> {
-                // unused, nur für Textfiles
             }
             STATE_MIC -> {
                 resultView.text = ""
@@ -650,8 +595,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     override fun onFinalResult(hypothesis: String) {
-        var hypothesisText = JSONObject(hypothesis)["text"].toString()
-        // TODO hier vielleicht zurück zu Ready_State
+        // var hypothesisText = JSONObject(hypothesis)["text"].toString()
         setUiState(STATE_READY)
         if (speechStreamService != null) {
             speechStreamService = null

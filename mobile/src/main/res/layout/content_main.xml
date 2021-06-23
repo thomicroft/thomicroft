@@ -45,7 +45,6 @@
         android:layout_marginBottom="@dimen/card_list_margin_bottom"
         android:visibility="visible" />
 
-    <!-- TODO Textoutput for STT Test -->
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/defaultMessageTextView"
@@ -101,7 +100,6 @@
             android:contentDescription="@string/speech_prompt"
             android:src="@drawable/ic_microfon"
             tools:ignore="NotSibling" />
-            <!-- TODO Icon austauschen-->
 
         <EditText
             android:id="@+id/utteranceInput"
