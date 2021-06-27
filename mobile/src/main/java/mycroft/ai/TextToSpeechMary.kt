@@ -27,6 +27,7 @@ class TextToSpeechMary {
     private var port : String
     private var path : File
     private var file : File
+    private var mediaPlayer : MediaPlayer?
 
     constructor(context : Context, serverIp : String, port : String = "59125") {
         this.serverIp = serverIp
@@ -36,13 +37,14 @@ class TextToSpeechMary {
         url = "http://$serverIp:$port"
         path = context.filesDir
         file = File(path, "output.wav")
+        mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))
     }
 
     fun sendTTSRequest(input_text : String) {
-        var mUrl = "$url/process?INPUT_TEXT=$input_text&INPUT_TYPE=TEXT&OUTPUT_TYPE=AUDIO&AUDIO=WAVE_FILE&LOCALE=de&VOICE=bits3-hsmm"
+        val mUrl = "$url/process?INPUT_TEXT=$input_text&INPUT_TYPE=TEXT&OUTPUT_TYPE=AUDIO&AUDIO=WAVE_FILE&LOCALE=de&VOICE=bits3-hsmm"
         //var mUrl = "$url/api/tts?text=$input_text&voice=de-de%2Fthorsten-glow_tts&vocoder=hifi_gan%2Fvctk_medium&denoiserStrength=0.005&noiseScale=0.333&lengthScale=1"
-        var hashMap: HashMap<String, String> = HashMap()
-        var request = InputStreamVolleyRequest(
+        val hashMap: HashMap<String, String> = HashMap()
+        val request = InputStreamVolleyRequest(
             context, Request.Method.GET, mUrl,
             Response.Listener<ByteArray>() { response ->
                 writeWavFile(response)
@@ -61,25 +63,26 @@ class TextToSpeechMary {
     }
 
     private fun playWav(file : File) {
-        var mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))
-        if (mediaPlayer.isPlaying) {
+        if (mediaPlayer == null) {
+            mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))
+        }
+        if (mediaPlayer?.isPlaying == true) {
 
-            mediaPlayer.setOnCompletionListener {
+            mediaPlayer?.setOnCompletionListener {
                 try{
-                    mediaPlayer.reset()
-                    mediaPlayer.setDataSource(file.path)
-                    mediaPlayer.prepare()
-                    mediaPlayer.start()
+                    mediaPlayer?.reset()
+                    mediaPlayer?.setDataSource(file.path)
+                    mediaPlayer?.prepare()
+                    mediaPlayer?.start()
                     file.delete()
                 } catch (e : Exception) {
-
                 }
             }
         } else {
-            mediaPlayer.reset()
-            mediaPlayer.setDataSource(file.path)
-            mediaPlayer.prepare()
-            mediaPlayer.start()
+            mediaPlayer?.reset()
+            mediaPlayer?.setDataSource(file.path)
+            mediaPlayer?.prepare()
+            mediaPlayer?.start()
             file.delete()
         }
 
