@@ -25,7 +25,6 @@ class TextToSpeechMary {
     private var queue : RequestQueue
     private var url : String
     private var port : String
-    private var mediaPlayer : MediaPlayer
     private var path : File
     private var file : File
 
@@ -37,7 +36,6 @@ class TextToSpeechMary {
         url = "http://$serverIp:$port"
         path = context.filesDir
         file = File(path, "output.wav")
-        mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))
     }
 
     fun sendTTSRequest(input_text : String) {
@@ -55,6 +53,7 @@ class TextToSpeechMary {
     }
 
     private fun writeWavFile(data : ByteArray) {
+        file = File(path, "output.wav")
         FileOutputStream(file).use {
             it.write(data)
         }
@@ -62,19 +61,26 @@ class TextToSpeechMary {
     }
 
     private fun playWav(file : File) {
+        var mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))
         if (mediaPlayer.isPlaying) {
 
             mediaPlayer.setOnCompletionListener {
-                mediaPlayer.reset()
-                mediaPlayer.setDataSource(file.path)
-                mediaPlayer.prepare()
-                mediaPlayer.start()
+                try{
+                    mediaPlayer.reset()
+                    mediaPlayer.setDataSource(file.path)
+                    mediaPlayer.prepare()
+                    mediaPlayer.start()
+                    file.delete()
+                } catch (e : Exception) {
+
+                }
             }
         } else {
             mediaPlayer.reset()
             mediaPlayer.setDataSource(file.path)
             mediaPlayer.prepare()
             mediaPlayer.start()
+            file.delete()
         }
 
     }
