@@ -91,6 +91,7 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
+        <service android:name=".services.PorcupineService" android:enabled="true" android:exported="false" />
 
     </application>
 

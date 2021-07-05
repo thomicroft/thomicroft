@@ -41,9 +41,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.*
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
@@ -52,6 +49,7 @@ import mycroft.ai.Constants.MycroftMobileConstants.VERSION_CODE_PREFERENCE_KEY
 import mycroft.ai.Constants.MycroftMobileConstants.VERSION_NAME_PREFERENCE_KEY
 import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
+import mycroft.ai.services.PorcupineService
 import mycroft.ai.shared.utilities.GuiUtilities
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
@@ -71,7 +69,6 @@ import org.vosk.android.StorageService
 import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.*
 
 
 class MainActivity : AppCompatActivity(), RecognitionListener {
@@ -200,6 +197,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
         } else {
             initModel()
+            startPorcupine()
         }
 
     }
@@ -469,6 +467,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechStreamService != null) {
             speechStreamService!!.stop()
         }
+
+        stopPorcupine()
     }
 
     public override fun onStart() {
@@ -615,6 +615,18 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (speechService != null) {
             speechService!!.setPause(checked)
         }
+    }
+
+    // Porcupine functions
+
+    private fun startPorcupine() {
+        val serviceIntent = Intent(this, PorcupineService::class.java)
+        ContextCompat.startForegroundService(this, serviceIntent)
+    }
+
+    private fun stopPorcupine() {
+        val serviceIntent = Intent(this, PorcupineService::class.java)
+        stopService(serviceIntent)
     }
 
 }
