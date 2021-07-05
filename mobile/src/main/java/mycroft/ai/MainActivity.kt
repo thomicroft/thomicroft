@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         loadPreferences()
 
-        marytts = TextToSpeechMary(this, wsip)
+        marytts = TextToSpeechMary(this, wsip, "5002")
 
         ttsManager = TTSManager(this)
         mycroftAdapter = MycroftAdapter(utterances, applicationContext, menuInflater)
