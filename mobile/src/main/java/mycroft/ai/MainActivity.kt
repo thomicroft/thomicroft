@@ -51,6 +51,7 @@ import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.services.PorcupineService
 import mycroft.ai.shared.utilities.GuiUtilities
+import mycroft.ai.shared.utilities.GuiUtilities.showToast
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
 import mycroft.ai.utils.NetworkUtil
@@ -86,7 +87,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var resultText = ""
 
 
-    private lateinit var ttsManager: TTSManager
+    // private lateinit var ttsManager: TTSManager
     private lateinit var mycroftAdapter: MycroftAdapter
     private lateinit var wsip: String
     private lateinit var sharedPref: SharedPreferences
@@ -121,9 +122,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         loadPreferences()
 
+
         marytts = TextToSpeechMary(this, wsip, "5002")
 
-        ttsManager = TTSManager(this)
+        //ttsManager = TTSManager(this)
         mycroftAdapter = MycroftAdapter(utterances, applicationContext, menuInflater)
         mycroftAdapter.setOnLongItemClickListener(object: MycroftAdapter.OnLongItemClickListener {
             override fun itemLongClicked(v: View, position: Int) {
@@ -171,7 +173,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             editor.apply()
 
             // stop tts from speaking if app reader disabled
-            if (!isChecked) ttsManager.initQueue("")
+            //if (!isChecked) ttsManager.initQueue("")
         }
 
         val llm = LinearLayoutManager(this)
@@ -196,8 +198,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
         } else {
-            initModel()
             startPorcupine()
+            initModel()
         }
 
     }
@@ -455,7 +457,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     public override fun onDestroy() {
         super.onDestroy()
-        ttsManager.shutDown()
+        //ttsManager.shutDown()
         isNetworkChangeReceiverRegistered = false
         isWearBroadcastRevieverRegistered = false
 
@@ -620,13 +622,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     // Porcupine functions
 
     private fun startPorcupine() {
-        val serviceIntent = Intent(this, PorcupineService::class.java)
-        ContextCompat.startForegroundService(this, serviceIntent)
+        //val serviceIntent = Intent(this, PorcupineService::class.java)
+        //ContextCompat.startForegroundService(this, serviceIntent)
+        PorcupineService.startService(this, "Thomicroft Service is running")
     }
 
     private fun stopPorcupine() {
-        val serviceIntent = Intent(this, PorcupineService::class.java)
-        stopService(serviceIntent)
+        //val serviceIntent = Intent(this, PorcupineService::class.java)
+        //stopService(serviceIntent)
+        PorcupineService.stopService(this)
     }
+
+
 
 }
