@@ -64,7 +64,7 @@ class TextToSpeechMary {
 
     private fun writeWavFile(data : ByteArray) {
         val file = File(filePath, "output$currentOutput.wav")
-        currentOutput++
+        currentOutput = (currentOutput + 1).rem(10)
         FileOutputStream(file).use {
             it.write(data)
         }
