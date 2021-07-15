@@ -27,6 +27,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.preference.PreferenceManager
 import android.speech.RecognizerIntent
 import android.util.Log
@@ -51,7 +52,6 @@ import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.services.PorcupineService
 import mycroft.ai.shared.utilities.GuiUtilities
-import mycroft.ai.shared.utilities.GuiUtilities.showToast
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
 import mycroft.ai.utils.NetworkUtil
@@ -72,7 +72,7 @@ import java.net.URI
 import java.net.URISyntaxException
 
 
-class MainActivity : AppCompatActivity(), RecognitionListener {
+class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceCallbacks {
     // Mycroft Part
     private val logTag = "Mycroft"
     private val utterances = mutableListOf<Utterance>()
@@ -110,6 +110,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var speechService: SpeechService? = null
     private var speechStreamService : SpeechStreamService? = null
     private lateinit var resultView : TextView
+
+    private var bound : Boolean = false
+    private var porcupineService: PorcupineService? = null
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -198,7 +202,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
         } else {
-            startPorcupine()
+            var intent = startPorcupine()
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
             initModel()
         }
 
@@ -416,7 +421,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     }
 
-    private fun recognizeMicrophone() {
+    override fun recognizeMicrophone() {
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
@@ -486,6 +491,26 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         if (launchedFromWidget) {
             autoPromptForSpeech = true
+        }
+
+        if (bound) {
+            porcupineService?.setCallbacks(null); // unregister
+            unbindService(serviceConnection);
+            bound = false;
+        }
+    }
+
+    private val serviceConnection: ServiceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // cast the IBinder and get MyService instance
+            val binder: PorcupineService.PorcupineBinder = service as PorcupineService.PorcupineBinder
+            porcupineService = binder.getService()
+            bound = true
+            porcupineService?.setCallbacks(this@MainActivity) // register
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            bound = false
         }
     }
 
@@ -621,16 +646,22 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     // Porcupine functions
 
-    private fun startPorcupine() {
+    private fun startPorcupine() : Intent? {
         //val serviceIntent = Intent(this, PorcupineService::class.java)
         //ContextCompat.startForegroundService(this, serviceIntent)
-        PorcupineService.startService(this, "Thomicroft Service is running")
+        intent = PorcupineService.startService(this, "Thomicroft Service is running")
+        return intent
     }
 
-    private fun stopPorcupine() {
+    private fun stopPorcupine() : Intent? {
         //val serviceIntent = Intent(this, PorcupineService::class.java)
         //stopService(serviceIntent)
-        PorcupineService.stopService(this)
+        intent = PorcupineService.stopService(this)
+        return intent
+    }
+
+    override fun showExampleToast() {
+        showToast("Wake Word erkannt!")
     }
 
 
