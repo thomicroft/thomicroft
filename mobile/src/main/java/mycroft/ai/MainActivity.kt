@@ -51,7 +51,7 @@ import mycroft.ai.Constants.MycroftMobileConstants.VERSION_NAME_PREFERENCE_KEY
 import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.services.PorcupineService
-import mycroft.ai.shared.utilities.GuiUtilities
+import mycroft.ai.shared.utilities.GuiUtilities.showToast
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
 import mycroft.ai.utils.NetworkUtil
@@ -113,6 +113,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
 
     private var bound : Boolean = false
     private var porcupineService: PorcupineService? = null
+    private lateinit var broadcastRec : BroadcastReceiver
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -202,11 +203,20 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
         } else {
+            initModel()
             var intent = startPorcupine()
             bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
-            initModel()
-        }
 
+            var filter = IntentFilter()
+            filter.addAction("thomicroft.recognizeMicrophone")
+            broadcastRec = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    showExampleToast()
+                    recognizeMicrophone()
+                }
+            }
+            registerReceiver(broadcastRec, filter)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -245,7 +255,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
             val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val data = ClipData.newPlainText("text", utterances[currentItemPosition].utterance)
             clipboardManager.setPrimaryClip(data)
-            showToast("Copied to clipboard")
+            showToast(this,"Copied to clipboard")
         } else if (item.itemId == R.id.mycroft_share) {
             // Share utterance
             val sendIntent = Intent().apply {
@@ -409,14 +419,14 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
                     webSocketClient!!.send(json)
                     addData(Utterance(msg, UtteranceFrom.USER))
                 } catch (exception: WebsocketNotConnectedException) {
-                    showToast(resources.getString(R.string.websocket_closed))
+                    showToast(this, resources.getString(R.string.websocket_closed))
                 } catch (exception: KotlinNullPointerException) {
-                    showToast(resources.getString(R.string.websocket_null))
+                    showToast(this, resources.getString(R.string.websocket_null))
                 }
             }, 1000)
 
         } catch (exception: WebsocketNotConnectedException) {
-            showToast(resources.getString(R.string.websocket_closed))
+            showToast(this, resources.getString(R.string.websocket_closed))
         }
 
     }
@@ -476,6 +486,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         }
 
         stopPorcupine()
+        unregisterBroadcastReceiver(broadcastRec)
     }
 
     public override fun onStart() {
@@ -500,10 +511,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         }
     }
 
-    private val serviceConnection: ServiceConnection = object : ServiceConnection {
+    private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
             // cast the IBinder and get MyService instance
-            val binder: PorcupineService.PorcupineBinder = service as PorcupineService.PorcupineBinder
+            val binder = service as PorcupineService.PorcupineBinder
             porcupineService = binder.getService()
             bound = true
             porcupineService?.setCallbacks(this@MainActivity) // register
@@ -562,9 +573,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         }
     }
 
-    private fun showToast(message: String) {
-        GuiUtilities.showToast(applicationContext, message)
-    }
 
     private fun initModel() {
         StorageService.unpack(this, "vosk-model-small-de-0.15", "model",
@@ -661,7 +669,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
     }
 
     override fun showExampleToast() {
-        showToast("Wake Word erkannt!")
+        showToast(this, "Wake Word erkannt!")
     }
 
 

@@ -15,6 +15,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
+import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mycroft.ai.MainActivity
 import mycroft.ai.PorcupineServiceCallbacks
 
@@ -90,7 +91,9 @@ class PorcupineService : Service() {
                     applicationContext
                 ) { keywordIndex: Int ->
                     //TODO callback for recognition
-                    porcupineServiceCallbacks?.showExampleToast()
+                    //porcupineServiceCallbacks?.showExampleToast()
+                    var local = Intent("thomicroft.recognizeMicrophone")
+                    this.sendBroadcast(local)
                 }
             porcupineManager.start()
         } catch (e: PorcupineException) {
