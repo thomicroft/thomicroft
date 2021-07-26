@@ -42,6 +42,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
@@ -114,6 +118,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
     private var bound : Boolean = false
     private var porcupineService: PorcupineService? = null
     private lateinit var broadcastRec : BroadcastReceiver
+
+    private lateinit var requestQueue : RequestQueue
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -216,6 +222,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
                 }
             }
             registerReceiver(broadcastRec, filter)
+
+            requestQueue = Volley.newRequestQueue(this)
         }
     }
 
@@ -435,7 +443,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
-            sendMessage(resultText)
+            //sendMessage(resultText)
+            parseNumber(resultText)
             setUiState(STATE_READY)
             resultText = ""
         } else {
@@ -625,6 +634,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         resultView.append(" $hypothesisText")
         // resultView.append(hypothesis + "\n")
         // resultView.text = hypothesisText["text"].toString()
+
         resultText += " $hypothesisText"
 
     }
@@ -670,6 +680,20 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
 
     override fun showExampleToast() {
         showToast(this, "Wake Word erkannt!")
+    }
+
+    fun parseNumber(message : String) {
+        val url = "http://$wsip:4200/?message=$message"
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            { response ->
+                showToast(this, response)
+                sendMessage(response)
+            },
+            {
+                showToast(this, "That didn't work!")
+            })
+        requestQueue.add(stringRequest)
     }
 
 
