@@ -29,6 +29,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:allowBackup="true"
@@ -91,6 +92,7 @@
                     android:scheme="wear" />
             </intent-filter>
         </service>
+        <service android:name=".services.PorcupineService" android:enabled="true" android:exported="false" />
 
     </application>
 
