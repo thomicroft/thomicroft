@@ -27,6 +27,7 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
+import android.os.IBinder
 import android.preference.PreferenceManager
 import android.speech.RecognizerIntent
 import android.util.Log
@@ -41,6 +42,10 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.android.volley.Request
+import com.android.volley.RequestQueue
+import com.android.volley.toolbox.StringRequest
+import com.android.volley.toolbox.Volley
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
 import kotlinx.android.synthetic.main.activity_main.*
@@ -50,7 +55,6 @@ import mycroft.ai.Constants.MycroftMobileConstants.VERSION_NAME_PREFERENCE_KEY
 import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.services.PorcupineService
-import mycroft.ai.shared.utilities.GuiUtilities
 import mycroft.ai.shared.utilities.GuiUtilities.showToast
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
 import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
@@ -72,7 +76,7 @@ import java.net.URI
 import java.net.URISyntaxException
 
 
-class MainActivity : AppCompatActivity(), RecognitionListener {
+class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceCallbacks {
     // Mycroft Part
     private val logTag = "Mycroft"
     private val utterances = mutableListOf<Utterance>()
@@ -110,6 +114,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var speechService: SpeechService? = null
     private var speechStreamService : SpeechStreamService? = null
     private lateinit var resultView : TextView
+
+    private var bound : Boolean = false
+    private var porcupineService: PorcupineService? = null
+    private lateinit var broadcastRec : BroadcastReceiver
+
+    private lateinit var requestQueue : RequestQueue
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -198,10 +209,22 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         if (permissionCheck != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this,  arrayOf(Manifest.permission.RECORD_AUDIO) , PERMISSIONS_REQUEST_RECORD_AUDIO)
         } else {
-            startPorcupine()
             initModel()
-        }
+            var intent = startPorcupine()
+            bindService(intent, serviceConnection, Context.BIND_AUTO_CREATE)
 
+            var filter = IntentFilter()
+            filter.addAction("thomicroft.recognizeMicrophone")
+            broadcastRec = object : BroadcastReceiver() {
+                override fun onReceive(context: Context?, intent: Intent?) {
+                    showExampleToast()
+                    recognizeMicrophone()
+                }
+            }
+            registerReceiver(broadcastRec, filter)
+
+            requestQueue = Volley.newRequestQueue(this)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -240,7 +263,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             val clipboardManager = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val data = ClipData.newPlainText("text", utterances[currentItemPosition].utterance)
             clipboardManager.setPrimaryClip(data)
-            showToast("Copied to clipboard")
+            showToast(this,"Copied to clipboard")
         } else if (item.itemId == R.id.mycroft_share) {
             // Share utterance
             val sendIntent = Intent().apply {
@@ -404,23 +427,24 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     webSocketClient!!.send(json)
                     addData(Utterance(msg, UtteranceFrom.USER))
                 } catch (exception: WebsocketNotConnectedException) {
-                    showToast(resources.getString(R.string.websocket_closed))
+                    showToast(this, resources.getString(R.string.websocket_closed))
                 } catch (exception: KotlinNullPointerException) {
-                    showToast(resources.getString(R.string.websocket_null))
+                    showToast(this, resources.getString(R.string.websocket_null))
                 }
             }, 1000)
 
         } catch (exception: WebsocketNotConnectedException) {
-            showToast(resources.getString(R.string.websocket_closed))
+            showToast(this, resources.getString(R.string.websocket_closed))
         }
 
     }
 
-    private fun recognizeMicrophone() {
+    override fun recognizeMicrophone() {
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
-            sendMessage(resultText)
+            //sendMessage(resultText)
+            parseNumber(resultText)
             setUiState(STATE_READY)
             resultText = ""
         } else {
@@ -471,6 +495,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
 
         stopPorcupine()
+        unregisterBroadcastReceiver(broadcastRec)
     }
 
     public override fun onStart() {
@@ -486,6 +511,26 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         if (launchedFromWidget) {
             autoPromptForSpeech = true
+        }
+
+        if (bound) {
+            porcupineService?.setCallbacks(null); // unregister
+            unbindService(serviceConnection);
+            bound = false;
+        }
+    }
+
+    private val serviceConnection = object : ServiceConnection {
+        override fun onServiceConnected(className: ComponentName, service: IBinder) {
+            // cast the IBinder and get MyService instance
+            val binder = service as PorcupineService.PorcupineBinder
+            porcupineService = binder.getService()
+            bound = true
+            porcupineService?.setCallbacks(this@MainActivity) // register
+        }
+
+        override fun onServiceDisconnected(arg0: ComponentName) {
+            bound = false
         }
     }
 
@@ -537,9 +582,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-    private fun showToast(message: String) {
-        GuiUtilities.showToast(applicationContext, message)
-    }
 
     private fun initModel() {
         StorageService.unpack(this, "vosk-model-small-de-0.15", "model",
@@ -592,6 +634,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         resultView.append(" $hypothesisText")
         // resultView.append(hypothesis + "\n")
         // resultView.text = hypothesisText["text"].toString()
+
         resultText += " $hypothesisText"
 
     }
@@ -621,16 +664,36 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     // Porcupine functions
 
-    private fun startPorcupine() {
+    private fun startPorcupine() : Intent? {
         //val serviceIntent = Intent(this, PorcupineService::class.java)
         //ContextCompat.startForegroundService(this, serviceIntent)
-        PorcupineService.startService(this, "Thomicroft Service is running")
+        intent = PorcupineService.startService(this, "Thomicroft Service is running")
+        return intent
     }
 
-    private fun stopPorcupine() {
+    private fun stopPorcupine() : Intent? {
         //val serviceIntent = Intent(this, PorcupineService::class.java)
         //stopService(serviceIntent)
-        PorcupineService.stopService(this)
+        intent = PorcupineService.stopService(this)
+        return intent
+    }
+
+    override fun showExampleToast() {
+        showToast(this, "Wake Word erkannt!")
+    }
+
+    fun parseNumber(message : String) {
+        val url = "http://$wsip:4200/?message=$message"
+        val stringRequest = StringRequest(
+            Request.Method.GET, url,
+            { response ->
+                showToast(this, response)
+                sendMessage(response)
+            },
+            {
+                showToast(this, "That didn't work!")
+            })
+        requestQueue.add(stringRequest)
     }
 
 
