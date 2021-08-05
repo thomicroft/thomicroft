@@ -44,6 +44,8 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.Request
 import com.android.volley.RequestQueue
+import com.android.volley.toolbox.JsonObjectRequest
+import com.android.volley.toolbox.RequestFuture
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.crashlytics.android.Crashlytics
@@ -74,6 +76,7 @@ import org.vosk.android.StorageService
 import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
+import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceCallbacks {
@@ -684,16 +687,23 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
 
     fun parseNumber(message : String) {
         val url = "http://$wsip:4200/?message=$message"
-        val stringRequest = StringRequest(
-            Request.Method.GET, url,
+
+        var postData = JSONObject();
+        postData.put("message", message)
+
+        val jsonRequest = JsonObjectRequest(
+            Request.Method.GET, url, postData,
             { response ->
-                showToast(this, response)
-                sendMessage(response)
+                val responseMessage = response["message"].toString()
+                sendMessage(responseMessage)
             },
             {
                 showToast(this, "That didn't work!")
             })
-        requestQueue.add(stringRequest)
+
+        requestQueue.add(jsonRequest)
+
+
     }
 
 
