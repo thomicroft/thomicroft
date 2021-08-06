@@ -702,10 +702,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
             })
 
         requestQueue.add(jsonRequest)
-
-
     }
-
 
 
 }

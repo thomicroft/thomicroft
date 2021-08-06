@@ -51,6 +51,10 @@ internal class MessageParser(private val message: String,
                 val ret = Utterance(obj.getJSONObject("data").getString("utterance"), UtteranceFrom.MYCROFT)
                 callback.call(ret)
             }
+            if (obj.optString("type") == "gui.value.set" && obj.getJSONObject("data").getBoolean("alarmExpired")) {
+                callback.call(Utterance("Alarm!", UtteranceFrom.MYCROFT))
+            }
+
         } catch (e: JSONException) {
             Log.e(logTag, "The response received did not conform to our expected JSON format.", e)
         }

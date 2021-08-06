@@ -58,7 +58,7 @@ class TextToSpeechMary {
             Response.ErrorListener { error ->
                 showToast(context, error.toString()) },
             hashMap)
-        request.retryPolicy = DefaultRetryPolicy(10000, 2, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+        request.retryPolicy = DefaultRetryPolicy(15000, 1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
         queue.add(request);
     }
 
@@ -69,12 +69,10 @@ class TextToSpeechMary {
             it.write(data)
         }
         files.add(file)
-        //playWav(file)
         play()
     }
 
     private fun playWav(file: File) {
-        //val mediaPlayer = MediaPlayer.create(context, Uri.fromFile(file))
 
         if (!mediaPlayer.isPlaying) {
             mediaPlayer.setDataSource(file.path)
@@ -99,7 +97,7 @@ class TextToSpeechMary {
 
         // when WAV is received while audio is still playing
         if (mediaPlayer.isPlaying && !files.isEmpty()) {
-            mediaPlayer.setOnCompletionListener(MediaPlayer.OnCompletionListener { play() })
+            mediaPlayer.setOnCompletionListener { play() }
         }
     }
 
