@@ -5,6 +5,6 @@ interface PorcupineServiceCallbacks {
 
     // TODO diese müsste noch durch Funktion ersetzt werden in der am Ende auch automatisch Aufnahme gestoppt wird
     fun recognizeMicrophone()
-    fun showExampleToast()
+    fun showWakeWordToast()
 
 }

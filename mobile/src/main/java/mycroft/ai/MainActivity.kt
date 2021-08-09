@@ -216,7 +216,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
             filter.addAction("thomicroft.recognizeMicrophone")
             broadcastRec = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
-                    showExampleToast()
+                    showWakeWordToast()
                     recognizeMicrophone()
                 }
             }
@@ -655,7 +655,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         return intent
     }
 
-    override fun showExampleToast() {
+    override fun showWakeWordToast() {
         showToast(this, "Wake Word erkannt!")
     }
 

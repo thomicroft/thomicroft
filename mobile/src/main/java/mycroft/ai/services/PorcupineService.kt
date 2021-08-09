@@ -77,7 +77,7 @@ class PorcupineService : Service() {
             0, notificationIntent, 0
         )
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Thomicroft Foreground Service")
+            .setContentTitle("Thomicroft WakeWord-Erkennung")
             .setContentText("input")
             .setContentIntent(pendingIntent)
             .build()
