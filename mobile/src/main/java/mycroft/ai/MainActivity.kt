@@ -659,7 +659,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         showToast(this, "Wake Word erkannt!")
     }
 
-    fun parseNumber(message : String) {
+    private fun parseNumber(message : String) {
         val url = "http://$wsip:4200/?message=$message"
 
         var postData = JSONObject();
