@@ -98,7 +98,6 @@ dependencies {
         transitive = true
     }
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
-    wearApp project(':wear')
     implementation project(':shared')
     implementation project(':models')
     //kotlin

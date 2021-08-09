@@ -58,8 +58,6 @@ import mycroft.ai.adapters.MycroftAdapter
 import mycroft.ai.receivers.NetworkChangeReceiver
 import mycroft.ai.services.PorcupineService
 import mycroft.ai.shared.utilities.GuiUtilities.showToast
-import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST
-import mycroft.ai.shared.wear.Constants.MycroftSharedConstants.MYCROFT_WEAR_REQUEST_MESSAGE
 import mycroft.ai.utils.NetworkUtil
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.exceptions.WebsocketNotConnectedException
@@ -88,7 +86,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
     private var currentItemPosition = -1
 
     private var isNetworkChangeReceiverRegistered = false
-    private var isWearBroadcastRevieverRegistered = false
     private var launchedFromWidget = false
     private var autoPromptForSpeech = false
     private var resultText = ""
@@ -99,7 +96,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
     private lateinit var wsip: String
     private lateinit var sharedPref: SharedPreferences
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
-    private lateinit var wearBroadcastReceiver: BroadcastReceiver
     private lateinit var marytts : TextToSpeechMary;
 
     var webSocketClient: WebSocketClient? = null
@@ -335,7 +331,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
 
     private fun registerReceivers() {
         registerNetworkReceiver()
-        registerWearBroadcastReceiver()
     }
 
     private fun registerNetworkReceiver() {
@@ -354,30 +349,10 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         }
     }
 
-    private fun registerWearBroadcastReceiver() {
-        if (!isWearBroadcastRevieverRegistered) {
-            wearBroadcastReceiver = object : BroadcastReceiver() {
-                override fun onReceive(context: Context, intent: Intent) {
-                    val message = intent.getStringExtra(MYCROFT_WEAR_REQUEST_MESSAGE)
-                    // send to mycroft
-                    if (message != null) {
-                        Log.d(logTag, "Wear message received: [$message] sending to Mycroft")
-                        sendMessage(message)
-                    }
-                }
-            }
-
-            LocalBroadcastManager.getInstance(this).registerReceiver(wearBroadcastReceiver, IntentFilter(MYCROFT_WEAR_REQUEST))
-            isWearBroadcastRevieverRegistered = true
-        }
-    }
-
     private fun unregisterReceivers() {
         unregisterBroadcastReceiver(networkChangeReceiver)
-        unregisterBroadcastReceiver(wearBroadcastReceiver)
 
         isNetworkChangeReceiverRegistered = false
-        isWearBroadcastRevieverRegistered = false
     }
 
     private fun unregisterBroadcastReceiver(broadcastReceiver: BroadcastReceiver) {
@@ -486,7 +461,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         super.onDestroy()
         //ttsManager.shutDown()
         isNetworkChangeReceiverRegistered = false
-        isWearBroadcastRevieverRegistered = false
 
         if (speechService != null) {
             speechService!!.stop()
