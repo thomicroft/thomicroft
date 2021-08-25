@@ -9,48 +9,18 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
-import android.os.Binder
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import androidx.localbroadcastmanager.content.LocalBroadcastManager
 import mycroft.ai.MainActivity
-import mycroft.ai.PorcupineServiceCallbacks
 
 
 class PorcupineService : Service() {
 
     private val channelId = "ForegroundService Kotlin"
     private lateinit var porcupineManager : PorcupineManager
-
-
-    /*
-    TODO Beginn Binder
-     */
-    private val binder : IBinder = PorcupineBinder()
-    private var porcupineServiceCallbacks : PorcupineServiceCallbacks? = null
-
-    inner class PorcupineBinder : Binder() {
-
-        fun getService() : PorcupineService? {
-            return this@PorcupineService
-        }
-    }
-
-    public override fun onBind(intent: Intent?): IBinder? {
-        return binder
-    }
-
-    public fun setCallbacks(callbacks: PorcupineServiceCallbacks?) {
-        porcupineServiceCallbacks = callbacks
-    }
-
-
-    /*
-    TODO Ende Binder
-     */
 
     companion object {
         fun startService(context : Context, message : String) : Intent {
@@ -66,7 +36,6 @@ class PorcupineService : Service() {
             return stopIntent
         }
     }
-
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val input = intent?.getStringExtra("inputExtra")
@@ -102,12 +71,10 @@ class PorcupineService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    /*
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
-     */
-
+    
     override fun onDestroy() {
         try {
             porcupineManager.stop()

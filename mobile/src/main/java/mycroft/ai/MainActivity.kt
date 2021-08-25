@@ -79,7 +79,7 @@ import java.net.URISyntaxException
 import java.util.concurrent.TimeUnit
 
 
-class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceCallbacks {
+class MainActivity : AppCompatActivity(), RecognitionListener {
     // Mycroft Part
     private val logTag = "Mycroft"
     private val utterances = mutableListOf<Utterance>()
@@ -442,7 +442,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
 
     }
 
-    override fun recognizeMicrophone() {
+    fun recognizeMicrophone() {
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
@@ -516,20 +516,11 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
             autoPromptForSpeech = true
         }
 
-        if (bound) {
-            porcupineService?.setCallbacks(null); // unregister
-            unbindService(serviceConnection);
-            bound = false;
-        }
     }
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-            // cast the IBinder and get MyService instance
-            val binder = service as PorcupineService.PorcupineBinder
-            porcupineService = binder.getService()
-            bound = true
-            porcupineService?.setCallbacks(this@MainActivity) // register
+
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -665,11 +656,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         }
     }
 
-    // Porcupine functions
-
     private fun startPorcupine() : Intent? {
-        //val serviceIntent = Intent(this, PorcupineService::class.java)
-        //ContextCompat.startForegroundService(this, serviceIntent)
         intent = PorcupineService.startService(this, "Thomicroft Service is running")
         return intent
     }
@@ -681,7 +668,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener, PorcupineServiceC
         return intent
     }
 
-    override fun showExampleToast() {
+    fun showExampleToast() {
         showToast(this, "Wake Word erkannt!")
     }
 
