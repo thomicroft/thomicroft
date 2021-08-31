@@ -46,7 +46,7 @@ class PorcupineService : Service() {
             0, notificationIntent, 0
         )
         val notification = NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Thomicroft Foreground Service")
+            .setContentTitle("Thomicroft WakeWord-Erkennung")
             .setContentText("input")
             .setContentIntent(pendingIntent)
             .build()
@@ -71,10 +71,11 @@ class PorcupineService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
+
     override fun onBind(intent: Intent?): IBinder? {
         return null
     }
-    
+
     override fun onDestroy() {
         try {
             porcupineManager.stop()

@@ -83,15 +83,6 @@
                 android:resource="@xml/mycroft_app_widget_info" />
         </receiver>
 
-        <service android:name=".services.MycroftWearListenerService">
-            <intent-filter>
-                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
-
-                <data
-                    android:host="*"
-                    android:scheme="wear" />
-            </intent-filter>
-        </service>
         <service android:name=".services.PorcupineService" android:enabled="true" android:exported="false" />
 
     </application>
