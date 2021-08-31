@@ -86,6 +86,7 @@ class PorcupineService : Service() {
         super.onDestroy()
     }
 
+    // create notification due to android requirement
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(channelId, "Foreground Service Channel",

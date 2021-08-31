@@ -51,6 +51,7 @@ internal class MessageParser(private val message: String,
                 val ret = Utterance(obj.getJSONObject("data").getString("utterance"), UtteranceFrom.MYCROFT)
                 callback.call(ret)
             }
+            // hard-coded event handler when alarm is expired
             if (obj.optString("type") == "gui.value.set" && obj.getJSONObject("data").getBoolean("alarmExpired")) {
                 callback.call(Utterance("Alarm!", UtteranceFrom.MYCROFT))
             }
