@@ -58,7 +58,7 @@ class TextToSpeechMary {
             Response.ErrorListener { error ->
                 showToast(context, error.toString()) },
             hashMap)
-        request.retryPolicy = DefaultRetryPolicy(15000, 1, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
+        request.retryPolicy = DefaultRetryPolicy(20000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
         queue.add(request);
     }
 
