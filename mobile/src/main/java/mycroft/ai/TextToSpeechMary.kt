@@ -48,7 +48,7 @@ class TextToSpeechMary {
         // Larynx with Eva-Voice
         // var mUrl = "$url/api/tts?text=$input_text&voice=de-de/eva_k-glow_tts&vocoder=hifi_gan/vctk_medium&denoiserStrength=0.005&noiseScale=0.333&lengthScale=1"
         // Larynx with Karlsson-Voice
-        var mUrl = "$url/api/tts?text=$input_text&voice=de-de/karlsson-glow_tts&vocoder=hifi_gan/vctk_medium&denoiserStrength=0.005&noiseScale=0.333&lengthScale=1"
+        var mUrl = "$url/api/tts?text=$input_text&voice=de-de/karlsson-glow_tts&vocoder=hifi_gan/vctk_medium&denoiserStrength=0.01&noiseScale=0.333&lengthScale=1"
         var hashMap: HashMap<String, String> = HashMap()
         var request = InputStreamVolleyRequest(
             context, Request.Method.GET, mUrl,
