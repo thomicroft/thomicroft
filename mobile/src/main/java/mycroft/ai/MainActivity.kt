@@ -88,8 +88,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private var autoPromptForSpeech = false
     private var resultText = ""
 
-
-    // private lateinit var ttsManager: TTSManager
     private lateinit var mycroftAdapter: MycroftAdapter
     private lateinit var wsip: String
     private lateinit var sharedPref: SharedPreferences
@@ -126,7 +124,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         tts = TextToSpeech(this, wsip, "5002")
 
-        //ttsManager = TTSManager(this)
         mycroftAdapter = MycroftAdapter(utterances, applicationContext, menuInflater)
         mycroftAdapter.setOnLongItemClickListener(object: MycroftAdapter.OnLongItemClickListener {
             override fun itemLongClicked(v: View, position: Int) {
