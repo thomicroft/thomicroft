@@ -3,24 +3,15 @@ package mycroft.ai
 import android.content.Context
 import android.media.MediaPlayer
 import android.net.Uri
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.android.volley.DefaultRetryPolicy
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.Response
-import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import mycroft.ai.shared.utilities.GuiUtilities.showToast
 import java.io.File
 import java.io.FileOutputStream
-import java.io.InputStream
-import java.net.URL
-import java.nio.file.Files
-import java.nio.file.Path
 import java.util.*
-import java.util.Base64
 
 class TextToSpeechMary {
     private var serverIp : String
@@ -56,10 +47,12 @@ class TextToSpeechMary {
                 writeWavFile(response)
             },
             Response.ErrorListener { error ->
-                showToast(context, error.toString()) },
+                showToast(context, error.toString())
+                playErrorMessage()
+                                   },
             hashMap)
         request.retryPolicy = DefaultRetryPolicy(20000, 0, DefaultRetryPolicy.DEFAULT_BACKOFF_MULT)
-        queue.add(request);
+        queue.add(request)
     }
 
     private fun writeWavFile(data : ByteArray) {
@@ -70,21 +63,6 @@ class TextToSpeechMary {
         }
         files.add(file)
         play()
-    }
-
-    private fun playWav(file: File) {
-
-        if (!mediaPlayer.isPlaying) {
-            mediaPlayer.setDataSource(file.path)
-            mediaPlayer.prepare()
-            mediaPlayer.start()
-        } else {
-            showToast(context, "Waiting for MediaPlayer to finish")
-        }
-        mediaPlayer.reset()
-        mediaPlayer.setDataSource(file.path)
-        mediaPlayer.prepare()
-        mediaPlayer.start()
     }
 
     private fun play() {
@@ -99,6 +77,15 @@ class TextToSpeechMary {
         if (mediaPlayer.isPlaying && !files.isEmpty()) {
             mediaPlayer.setOnCompletionListener { play() }
         }
+    }
+
+    // play message when server is not responding
+    fun playErrorMessage() {
+        mediaPlayer.reset()
+        val filename = "android.resource://" + context.packageName + "/raw/error_no_connection"
+        mediaPlayer.setDataSource(context, Uri.parse(filename))
+        mediaPlayer.prepare()
+        mediaPlayer.start()
     }
 
 }

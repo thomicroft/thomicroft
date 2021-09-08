@@ -24,6 +24,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.*
 import android.content.pm.PackageManager
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
@@ -45,8 +46,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.android.volley.Request
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.JsonObjectRequest
-import com.android.volley.toolbox.RequestFuture
-import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.crashlytics.android.Crashlytics
 import io.fabric.sdk.android.Fabric
@@ -74,7 +73,6 @@ import org.vosk.android.StorageService
 import java.io.IOException
 import java.net.URI
 import java.net.URISyntaxException
-import java.util.concurrent.TimeUnit
 
 
 class MainActivity : AppCompatActivity(), RecognitionListener {
@@ -406,13 +404,16 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     addData(Utterance(msg, UtteranceFrom.USER))
                 } catch (exception: WebsocketNotConnectedException) {
                     showToast(this, resources.getString(R.string.websocket_closed))
+                    marytts.playErrorMessage()
                 } catch (exception: KotlinNullPointerException) {
                     showToast(this, resources.getString(R.string.websocket_null))
+                    marytts.playErrorMessage()
                 }
             }, 1000)
 
         } catch (exception: WebsocketNotConnectedException) {
             showToast(this, resources.getString(R.string.websocket_closed))
+            marytts.playErrorMessage()
         }
 
     }
@@ -426,6 +427,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             setUiState(STATE_READY)
             resultText = ""
         } else {
+            playRecognitionChime()
             setUiState(STATE_MIC)
             try {
                 val rec = Recognizer(model, 16000.0f)
@@ -659,11 +661,16 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 sendMessage(responseMessage)
             },
             {
-                showToast(this, "That didn't work!")
+                marytts.playErrorMessage()
+                showToast(this, "Keine Verbindung zum text2num-Server")
             })
 
         requestQueue.add(jsonRequest)
     }
 
+    fun playRecognitionChime() {
+        val mp = MediaPlayer.create(applicationContext, resources.getIdentifier("voice_recognition_chime", "raw", packageName))
+        mp.start()
+    }
 
 }
