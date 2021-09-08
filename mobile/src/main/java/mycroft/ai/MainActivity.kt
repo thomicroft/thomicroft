@@ -514,7 +514,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         // get mycroft-core ip address
         wsip = sharedPref.getString("ip", "")!!
-        if (wsip!!.isEmpty()) {
+        if (wsip.isEmpty()) {
             // eep, show the settings intent!
             startActivity(Intent(this, SettingsActivity::class.java))
         } else if (webSocketClient == null || webSocketClient!!.connection.isClosed) {
@@ -596,7 +596,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     override fun onPartialResult(hypothesis: String) {
         //resultView.append(hypothesis + "\n")
-        // resultView.text = hypothesis
+        //resultView.text = hypothesis
     }
 
     override fun onResult(hypothesis : String) {
@@ -638,8 +638,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun stopPorcupine() : Intent? {
-        //val serviceIntent = Intent(this, PorcupineService::class.java)
-        //stopService(serviceIntent)
         intent = PorcupineService.stopService(this)
         return intent
     }
