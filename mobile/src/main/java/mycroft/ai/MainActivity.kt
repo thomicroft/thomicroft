@@ -94,15 +94,12 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var wsip: String
     private lateinit var sharedPref: SharedPreferences
     private lateinit var networkChangeReceiver: NetworkChangeReceiver
-    private lateinit var marytts : TextToSpeechMary;
+    private lateinit var tts : TextToSpeech;
 
     var webSocketClient: WebSocketClient? = null
 
-    private val STATE_START = 0
-    private val STATE_READY = 1
-    private val STATE_DONE = 2
-    private val STATE_FILE = 3
-    private val STATE_MIC = 4
+    private val STATE_READY = 0
+    private val STATE_MIC = 1
 
     /* Used to handle permission request */
     private final val PERMISSIONS_REQUEST_RECORD_AUDIO = 1
@@ -113,7 +110,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     private lateinit var resultView : TextView
 
     private var bound : Boolean = false
-    private var porcupineService: PorcupineService? = null
     private lateinit var broadcastRec : BroadcastReceiver
 
     private lateinit var requestQueue : RequestQueue
@@ -122,16 +118,13 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Mycroft
         Fabric.with(this, Crashlytics())
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar as Toolbar?)
 
-
         loadPreferences()
 
-
-        marytts = TextToSpeechMary(this, wsip, "5002")
+        tts = TextToSpeech(this, wsip, "5002")
 
         //ttsManager = TTSManager(this)
         mycroftAdapter = MycroftAdapter(utterances, applicationContext, menuInflater)
@@ -179,9 +172,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             val editor = sharedPref.edit()
             editor.putBoolean("appReaderSwitch", isChecked)
             editor.apply()
-
-            // stop tts from speaking if app reader disabled
-            //if (!isChecked) ttsManager.initQueue("")
         }
 
         val llm = LinearLayoutManager(this)
@@ -195,11 +185,8 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
         registerReceivers()
 
-        // start the discovery activity (testing only)
-        // startActivity(new Intent(this, DiscoveryActivity.class));
-
         resultView = findViewById(R.id.result_text)
-        setUiState(STATE_START)
+        setUiState(STATE_READY)
         LibVosk.setLogLevel(LogLevel.INFO)
 
         var permissionCheck = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.RECORD_AUDIO)
@@ -322,7 +309,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         mycroftAdapter.notifyItemInserted(utterances.size - 1)
         if (voxswitch.isChecked) {
             if (mycroftUtterance.from.toString() != "USER") {
-                marytts.sendTTSRequest(mycroftUtterance.utterance)
+                tts.sendTTSRequest(mycroftUtterance.utterance)
             }
         }
         cardList.smoothScrollToPosition(mycroftAdapter.itemCount - 1)
@@ -385,7 +372,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     fun sendMessage(msg: String) {
-        // let's keep it simple eh?
+        // sends message to the mycroft core
         //final String json = "{\"message_type\":\"recognizer_loop:utterance\", \"context\": null, \"metadata\": {\"utterances\": [\"" + msg + "\"]}}";
         val json = "{\"data\": {\"utterances\": [\"$msg\"]}, \"type\": \"recognizer_loop:utterance\", \"context\": null}"
 
@@ -405,28 +392,31 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                     addData(Utterance(msg, UtteranceFrom.USER))
                 } catch (exception: WebsocketNotConnectedException) {
                     showToast(this, resources.getString(R.string.websocket_closed))
-                    marytts.playErrorMessage()
+                    tts.playErrorMessage()
                 } catch (exception: KotlinNullPointerException) {
                     showToast(this, resources.getString(R.string.websocket_null))
-                    marytts.playErrorMessage()
+                    tts.playErrorMessage()
                 }
             }, 1000)
 
         } catch (exception: WebsocketNotConnectedException) {
             showToast(this, resources.getString(R.string.websocket_closed))
-            marytts.playErrorMessage()
+            tts.playErrorMessage()
         }
 
     }
 
     fun recognizeMicrophone() {
+        // speech recognition
+
+        // if: speech recognition is activated -> deactivate speech recognition and send message to text2num-server
         if (speechService != null) {
             speechService!!.stop()
             speechService = null
-            //sendMessage(resultText)
             parseNumber(resultText)
             setUiState(STATE_READY)
             resultText = ""
+        // else: speech recognition is not activated -> activated speech recognition
         } else {
             playRecognitionChime()
             setUiState(STATE_MIC)
@@ -462,7 +452,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     public override fun onDestroy() {
         super.onDestroy()
-        //ttsManager.shutDown()
         isNetworkChangeReceiverRegistered = false
 
         if (speechService != null) {
@@ -497,7 +486,6 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(className: ComponentName, service: IBinder) {
-
         }
 
         override fun onServiceDisconnected(arg0: ComponentName) {
@@ -553,8 +541,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         }
     }
 
-
+    // initialize vosk model for speech recognition
     private fun initModel() {
+        // initialize german model
         StorageService.unpack(this, "vosk-model-small-de-0.15", "model",
             { model: Model? ->
                 this.model = model!!
@@ -575,15 +564,9 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     private fun setUiState(state: Int) {
         when (state) {
-            STATE_START -> {
-            }
            STATE_READY -> {
                textfeld.visibility = View.INVISIBLE
                result_text.visibility = View.INVISIBLE
-            }
-            STATE_DONE -> {
-            }
-            STATE_FILE -> {
             }
             STATE_MIC -> {
                 resultView.text = ""
@@ -595,23 +578,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     }
 
-    override fun onPartialResult(hypothesis: String) {
-        //resultView.append(hypothesis + "\n")
-        //resultView.text = hypothesis
-    }
+    override fun onPartialResult(hypothesis: String) {}
 
     override fun onResult(hypothesis : String) {
         var hypothesisText = JSONObject(hypothesis)["text"].toString()
         resultView.append(" $hypothesisText")
-        // resultView.append(hypothesis + "\n")
-        // resultView.text = hypothesisText["text"].toString()
 
         resultText += " $hypothesisText"
 
     }
 
     override fun onFinalResult(hypothesis: String) {
-        // var hypothesisText = JSONObject(hypothesis)["text"].toString()
         setUiState(STATE_READY)
         if (speechStreamService != null) {
             speechStreamService = null
@@ -647,6 +624,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         showToast(this, "Wake Word erkannt!")
     }
 
+    // converts written out numbers into normal number values (using text2num-server)
     private fun parseNumber(message : String) {
         val url = "http://$wsip:4200/?message=$message"
 
@@ -660,7 +638,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
                 sendMessage(responseMessage)
             },
             {
-                marytts.playErrorMessage()
+                tts.playErrorMessage()
                 showToast(this, "Keine Verbindung zum text2num-Server")
             })
 
