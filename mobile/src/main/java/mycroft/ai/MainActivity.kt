@@ -214,6 +214,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
             filter.addAction("thomicroft.recognizeMicrophone")
             broadcastRec = object : BroadcastReceiver() {
                 override fun onReceive(context: Context?, intent: Intent?) {
+
                     showWakeWordToast()
                     recognizeMicrophone()
                 }

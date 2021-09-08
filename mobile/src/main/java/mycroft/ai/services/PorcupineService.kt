@@ -58,10 +58,8 @@ class PorcupineService : Service() {
                 .setSensitivity(0.7f)
                 .build(
                     applicationContext
-                ) { keywordIndex: Int ->
-                    //TODO callback for recognition
-                    //porcupineServiceCallbacks?.showExampleToast()
-                    var local = Intent("thomicroft.recognizeMicrophone")
+                ) {
+                    val local = Intent("thomicroft.recognizeMicrophone")
                     this.sendBroadcast(local)
                 }
             porcupineManager.start()
