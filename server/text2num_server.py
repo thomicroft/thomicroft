@@ -4,7 +4,7 @@ from text_to_num import text2num, alpha2digit
 import json
 
 
-hostName = '192.168.3.14'
+hostName = '0.0.0.0'
 serverPort = 4200
 
 class NumServer(BaseHTTPRequestHandler):
