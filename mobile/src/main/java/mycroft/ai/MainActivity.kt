@@ -301,15 +301,17 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun addData(mycroftUtterance: Utterance) {
-        utterances.add(mycroftUtterance)
-        defaultMessageTextView.visibility = View.GONE
-        mycroftAdapter.notifyItemInserted(utterances.size - 1)
-        if (voxswitch.isChecked) {
-            if (mycroftUtterance.from.toString() != "USER") {
-                tts.sendTTSRequest(mycroftUtterance.utterance)
+        if (!mycroftUtterance.utterance.equals("...")) {
+            utterances.add(mycroftUtterance)
+            defaultMessageTextView.visibility = View.GONE
+            mycroftAdapter.notifyItemInserted(utterances.size - 1)
+            if (voxswitch.isChecked) {
+                if (mycroftUtterance.from.toString() != "USER") {
+                    tts.sendTTSRequest(mycroftUtterance.utterance)
+                }
             }
+            cardList.smoothScrollToPosition(mycroftAdapter.itemCount - 1)
         }
-        cardList.smoothScrollToPosition(mycroftAdapter.itemCount - 1)
     }
 
     private fun registerReceivers() {
