@@ -582,6 +582,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
         resultView.append(" $hypothesisText")
 
         resultText += " $hypothesisText"
+        this.recognizeMicrophone()
 
     }
 
