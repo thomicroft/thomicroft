@@ -38,9 +38,10 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/cardList"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="395dp"
+        android:layout_height="579dp"
         android:layout_alignParentStart="true"
+        android:layout_marginStart="0dp"
         android:layout_marginTop="@dimen/card_list_margin_top"
         android:layout_marginBottom="@dimen/card_list_margin_bottom"
         android:visibility="visible" />
@@ -90,9 +91,8 @@
 
         <ImageButton
             android:id="@+id/micButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignTop="@+id/micButton"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="0dp"
@@ -131,8 +131,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:visibility="visible"
-            android:src="@drawable/ic_textfeld" />
+            android:src="@drawable/ic_textfeld"
+            android:visibility="visible" />
 
         <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/result_text"
@@ -140,10 +140,10 @@
             android:layout_height="160dp"
             android:layout_centerInParent="true"
             android:textAlignment="center"
-            android:textSize="10pt"
+            android:textAppearance="@style/TextAppearance.AppCompat.Light.SearchResult.Subtitle"
             android:textColor="@color/defaultTextColor"
-            android:visibility="invisible"
-            android:textAppearance="@style/TextAppearance.AppCompat.Light.SearchResult.Subtitle" />
+            android:textSize="10pt"
+            android:visibility="invisible" />
 
     </RelativeLayout>
 
