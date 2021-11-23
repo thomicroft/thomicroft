@@ -301,7 +301,7 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
     }
 
     private fun addData(mycroftUtterance: Utterance) {
-        if (!mycroftUtterance.utterance.equals("...")) {
+        if (mycroftUtterance.utterance != "...") {
             utterances.add(mycroftUtterance)
             defaultMessageTextView.visibility = View.GONE
             mycroftAdapter.notifyItemInserted(utterances.size - 1)
@@ -626,23 +626,25 @@ class MainActivity : AppCompatActivity(), RecognitionListener {
 
     // converts written out numbers into normal number values (using text2num-server)
     private fun parseNumber(message : String) {
-        val url = "http://$wsip:4200/?message=$message"
+        if (message.isNotEmpty()) {
+            val url = "http://$wsip:4200/?message=$message"
 
-        var postData = JSONObject();
-        postData.put("message", message)
+            var postData = JSONObject();
+            postData.put("message", message)
 
-        val jsonRequest = JsonObjectRequest(
-            Request.Method.GET, url, postData,
-            { response ->
-                val responseMessage = response["message"].toString()
-                sendMessage(responseMessage)
-            },
-            {
-                tts.playErrorMessage()
-                showToast(this, "Keine Verbindung zum text2num-Server")
-            })
+            val jsonRequest = JsonObjectRequest(
+                Request.Method.GET, url, postData,
+                { response ->
+                    val responseMessage = response["message"].toString()
+                    sendMessage(responseMessage)
+                },
+                {
+                    tts.playErrorMessage()
+                    showToast(this, "Keine Verbindung zum text2num-Server")
+                })
 
-        requestQueue.add(jsonRequest)
+            requestQueue.add(jsonRequest)
+        }
     }
 
     fun playRecognitionChime() {
